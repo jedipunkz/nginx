@@ -18,24 +18,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-template 'nginx.conf' do
-  path   "#{node['nginx']['dir']}/nginx.conf"
-  source 'nginx.conf.erb'
-  owner  'root'
-  group  node['root_group']
-  mode   '0644'
+template "nginx.conf" do
+  path "#{node['nginx']['dir']}/nginx.conf"
+  source "nginx.conf.erb"
+  owner "root"
+  group "root"
+  mode 00644
   notifies :reload, 'service[nginx]'
 end
 
+environment = node.chef_environment
+webservers = search(:node, "role:web AND chef_environment:#{environment}")
+
 template "#{node['nginx']['dir']}/sites-available/default" do
-  source 'default-site.erb'
-  owner  'root'
-  group  node['root_group']
-  mode   '0644'
+  source "default-site.erb"
+  owner "root"
+  group "root"
+  mode 00644
   notifies :reload, 'service[nginx]'
+    variables ({
+      :webservers => webservers
+    })
 end
 
 nginx_site 'default' do
   enable node['nginx']['default_site_enabled']
 end
+

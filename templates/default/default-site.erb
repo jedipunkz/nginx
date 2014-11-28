@@ -1,3 +1,11 @@
+<% if @webservers and ( @webservers != [] ) %>
+upstream backend {
+<% @webservers.each do |hostname| -%>
+  server <%= hostname['ipaddr'] -%>;
+<% end -%>
+}
+<% end %>
+
 server {
   listen   80;
   server_name  <%= node['hostname'] %>;
@@ -5,7 +13,12 @@ server {
   access_log  <%= node['nginx']['log_dir'] %>/localhost.access.log;
 
   location / {
-    root   <%= node['nginx']['default_root'] %>;
+    <% if @webservers and ( @webservers != [] ) %>
+    proxy_pass http://backend;
+    <% else %>
+    root   /var/www/nginx-default;
     index  index.html index.htm;
+    <% end %>
   }
 }
+
